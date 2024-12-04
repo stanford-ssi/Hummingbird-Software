@@ -38,7 +38,7 @@ File myFile;
 #define RF95_FREQ 915.0
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-/* * * * * HX711 Initialization * * * * */
+/* * * * * HX711 (Load Cell) Initialization * * * * */
 Adafruit_HX711 hx711(DATA_PIN, CLOCK_PIN);
 
 void setup(){
