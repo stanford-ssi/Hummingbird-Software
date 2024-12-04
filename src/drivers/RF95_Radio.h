@@ -7,8 +7,8 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
-class RF95_Radio(){
-publc: 
+class RF95_Radio {
+public: 
     /* Initializes the pins and ports of the rf95 */
     RF95_Radio();
 
@@ -16,21 +16,21 @@ publc:
     void _getMessage(int bufferSize);
 
     /* Sends a message to the receiving radio */
-    void _sendMessage(uint8_t packetLength);
+    void _sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_num);
 
     /* Changes the radio's frequency*/
     void _changeFrequency(double freq);
 
 private:
     /* Returns an ACK to the transmitter */
-    void _sendACK();
+    void _sendAck();
 
     /* Singleton instance of the radio driver */
-    RH_RF95 rf95;
+    RH_RF95 rf95 = RH_RF95(10, 0);
 
     /* Radio frequency */
     double RF95_FREQ = 0;
 
     /* Keeps count of packets sent */
     int16_t packetCount = 0;
-}
+};
