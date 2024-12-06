@@ -11,6 +11,12 @@
  * Code was heavily inspired by SSI Samwise Payload 2024 UART Protocol.
  */
 
+/* Purpose:
+ * This entire object just acts as a wrapper for the RH_RF95 module. It simplifies
+ * having to transmit and receive messages. At the time you are reading this it is
+ * currently not a true wrapper since you still have to pass through a RF_RH95*.
+ * Will eventually fix it soon after finals.
+ */
 class RF95_Radio {
 public: 
     /* Initializes the pins and ports of the rf95 */
