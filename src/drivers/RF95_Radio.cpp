@@ -12,7 +12,7 @@
 #define MAX_PACKET_LEN 4069
 
 #define ACK_TRIES 3
-    
+
 typedef struct{
     uint16_t length;
     uint16_t seq_num;
@@ -50,42 +50,15 @@ packet_header_t compute_packet_header (const uint8_t *packet, uint16_t len, uint
 }
 
 // Constructor
-RF95_Radio::RF95_Radio(){
-    Serial.begin(BAUD_RATE);
-
-    RF95_FREQ = 915.0;
-
-    // Initialize RF95
-    while (!rf95.init()) {
-        Serial.println("LoRa radio init failed");
-        Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    }
-    Serial.println("LoRa radio init OK!");
-
-    // Initialize frequency
-    while (!rf95.setFrequency(RF95_FREQ)){
-        Serial.println("Frequency was not set, error!"); 
-    }
-    Serial.println("Succesfully set frequency to: ");
-    Serial.print(RF95_FREQ);
-
-    // Setting Transmit power
-    rf95.setTxPower(23, false);
-
-    /* Note:
-        * Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
-        * The default transmitter power is 13dBm, using PA_BOOST.
-        * If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
-        * you can set transmitter powers from 5 to 23 dBm.
-        */
+RF95_Radio::RF95_Radio(RH_RF95* r){
+    radio = r;
 }
 
 void RF95_Radio::_getMessage(uint8_t *packet){
-    uint8_t* bytes_received;
-    uint8_t *len;
-    packet_header_t header;
+    uint8_t bytes_received[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(bytes_received);
 
-    while (!rf95.recv(bytes_received, len)){
+    while (!radio->recv(bytes_received, &len)){
         Serial.println("Trying to receive header!");
         delay(250);
     }
@@ -95,9 +68,9 @@ void RF95_Radio::_getMessage(uint8_t *packet){
 
     Serial.println("Preparing to read actual packet!");
 
-    uint8_t *packet_len;
+    uint8_t packet_len = len;
 
-    while (!rf95.recv(packet, packet_len)){
+    while (!radio->recv(packet, &packet_len)){
         Serial.println("Trying to receive the packet!");
         delay(250);
     }
@@ -108,7 +81,7 @@ void RF95_Radio::_getMessage(uint8_t *packet){
 void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_num){
     // Check packet length
     if (len > MAX_PACKET_LEN){
-        printf("Packet is too long!\n");
+        Serial.println("Packet is too long!\n");
         return;
     }
 
@@ -118,10 +91,10 @@ void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_
 
     // Sending the header
     Serial.println("Sending the header...");
-    rf95.send((uint8_t *) &header, sizeof(packet_header_t));
+    radio->send((uint8_t *) &header, sizeof(packet_header_t));
 
-    Serial.println("Waitinf for header to completely send...");
-    rf95.waitPacketSent(); // Blocking?
+    Serial.println("Waiting for header to completely send...");
+    radio->waitPacketSent(); // Blocking?
 
     // ACK for header
     uint8_t numTries = 0;
@@ -129,7 +102,7 @@ void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_
         uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
         uint8_t len = sizeof(buf);
 
-        if (rf95.recv(buf, &len)){
+        if (radio->recv(buf, &len)){
             Serial.println("Header ACK received!");
         }
 
@@ -143,15 +116,15 @@ void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_
 
     // Sending the actual packet
     Serial.println("Sending the packet...");
-    rf95.send(packet, len);
+    radio->send(packet, len);
 
     Serial.println("Waiting for packet to completely send...");
-    rf95.waitPacketSent(); // Blocking?
+    radio->waitPacketSent(); // Blocking?
 }
 
 void RF95_Radio::_changeFrequency(double freq){
-        RF95_FREQ = freq;
-    if (!rf95.setFrequency(RF95_FREQ)) {
+    RF95_FREQ = freq;
+    if (!radio->setFrequency(RF95_FREQ)) {
         Serial.println("Setting new frequency failed!");
     }
 }
@@ -161,8 +134,8 @@ void RF95_Radio::_sendAck(){
     uint8_t data[] = "And hello back to you";
     
     // Sending the packet
-    rf95.send(data, sizeof(data));
-    rf95.waitPacketSent();
+    radio->send(data, sizeof(data));
+    radio->waitPacketSent();
     Serial.println("Sent a reply");
     digitalWrite(LED_BUILTIN, LOW);
 }
