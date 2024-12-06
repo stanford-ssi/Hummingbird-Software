@@ -13,7 +13,7 @@ public:
     RF95_Radio();
 
     /* Tries to find the message, and prints out the message's output */
-    void _getMessage(int bufferSize);
+    void _getMessage(uint8_t *packet);
 
     /* Sends a message to the receiving radio */
     void _sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_num);

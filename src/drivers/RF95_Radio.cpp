@@ -80,28 +80,29 @@ RF95_Radio::RF95_Radio(){
         */
 }
 
-void RF95_Radio::_getMessage(int bufferSize){
-    const int secondBufferSize = 140;
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
+void RF95_Radio::_getMessage(uint8_t *packet){
+    uint8_t* bytes_received;
+    uint8_t *len;
+    packet_header_t header;
 
-    if (rf95.recv(buf, &len)) {
-        digitalWrite(LED_BUILTIN, HIGH);
-        RH_RF95::printBuffer("Received: ", buf, len);
-        Serial.print("Got: ");
+    while (!rf95.recv(bytes_received, len)){
+        Serial.println("Trying to receive header!");
+        delay(250);
+    }
 
-        Serial.println((char*)buf);
+    Serial.println("Header was received!");
+    _sendAck();
 
-        char secondBuffer[secondBufferSize];
-        snprintf(secondBuffer, sizeof(secondBuffer), "The value of the received message is: %s\n", (char*)buf);
+    Serial.println("Preparing to read actual packet!");
 
-        Serial.print("RSSI: ");
-        Serial.println(rf95.lastRssi(), DEC);
+    uint8_t *packet_len;
 
-        _sendAck();
-    } else {
-        Serial.println("Receive failed!");
-    } 
+    while (!rf95.recv(packet, packet_len)){
+        Serial.println("Trying to receive the packet!");
+        delay(250);
+    }
+
+    Serial.println("Packet was received!");
 }
 
 void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_num){
@@ -131,6 +132,8 @@ void RF95_Radio::_sendMessage(const uint8_t *packet, uint16_t len, uint16_t seq_
         if (rf95.recv(buf, &len)){
             Serial.println("Header ACK received!");
         }
+
+        delay(100); // 100 ms
     } 
 
     if (numTries >= ACK_TRIES){
