@@ -3,6 +3,14 @@
 // Copyright (C) 2011 Mike McCauley
 // $Id: RH_RF95.cpp,v 1.27 2020/07/05 08:52:21 mikem Exp $
 
+/*
+ * Most recent update: Jan 17, 2025 by Sam C.
+ * Found exact function (spiRead & spiWrite) that's giving issues with radio object instantiation.
+ * Comments start from line 82.
+ * Comment provided below.
+ */
+
+
 #include <RH_RF95.h>
 
 // Maybe a mutex for multithreading on Raspberry Pi?
@@ -42,8 +50,10 @@ RH_RF95::RH_RF95(uint8_t slaveSelectPin, uint8_t interruptPin, RHGenericSPI& spi
 
 bool RH_RF95::init()
 {
-    if (!RHSPIDriver::init())
-	return false;
+    if (!RHSPIDriver::init()) {
+        Serial.println("Calling RHSPIDriver::init(): Initialization of SPI driver failed.");
+        return false;
+    }
 
 #ifdef RH_USE_MUTEX
     if (RH_MUTEX_INIT(lock) != 0)
@@ -69,16 +79,20 @@ bool RH_RF95::init()
     }
 
     // No way to check the device type :-(
+
+    /* ---------------------------------------------------------------- */
+    /* THIS IS THE EXACT PART OF THE CODE THAT'S CAUSING ISSUES*/
     
     // Set sleep mode, so we can also set LORA mode:
     spiWrite(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE);
+
     delay(10); // Wait for sleep mode to take over from say, CAD
     // Check we are in sleep mode, with LORA set
     if (spiRead(RH_RF95_REG_01_OP_MODE) != (RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE))
     {
-//	Serial.println(spiRead(RH_RF95_REG_01_OP_MODE), HEX);
-	return false; // No device present?
+	    return false; // No device present?
     }
+    /* ---------------------------------------------------------------- */
 
 
     if (_interruptPin != RH_INVALID_PIN)

@@ -37,7 +37,7 @@ bool RHSPIDriver::init()
 #else
     delay(100);
 #endif
-    
+
     return true;
 }
 
@@ -61,12 +61,14 @@ uint8_t RH_INTERRUPT_ATTR RHSPIDriver::spiWrite(uint8_t reg, uint8_t val)
     ATOMIC_BLOCK_START;
     _spi.beginTransaction();
     selectSlave();
+    Serial.println(digitalRead(10));
     status = _spi.transfer(reg | RH_SPI_WRITE_MASK); // Send the address with the write mask on
     _spi.transfer(val); // New value follows
     // Based on https://forum.pjrc.com/attachment.php?attachmentid=10948&d=1499109224
     // Need this delay from some processors when running fast:
     delayMicroseconds(1);
     deselectSlave();
+    Serial.println(digitalRead(10));
     _spi.endTransaction();
     ATOMIC_BLOCK_END;
     return status;
