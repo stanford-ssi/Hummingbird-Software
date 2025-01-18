@@ -1,5 +1,6 @@
 ## Latest Update
 Jan. 17 (Sam C.): organized code for compiling and uploading capability across platforms. Issue with RF95 module instantiation still exists. Suspecting that the module itself may have hardware issues, since the 3V3 voltage measured directly from the RFM95 chip (pinout here: https://www.hoperf.com/uploads/RFM96W-V2.0_1695351477.pdf) is not 3V3.
+The exact functions having issues are spiRead and spiWrite in lib/Radiohead-master/RHSPIDriver.h and lib/Radiohead-master/RHSPIDriver.cpp. The function using them can be found in lib/Radiohead-master/RH_RF95.h and lib/Radiohead-master/RH_RF95.cpp.
 
 ## Initial setup 
 The repository relies on a VSCode Extension called PlatformIO, this makes it easier for us to upload and run code on the Teensy boards.
