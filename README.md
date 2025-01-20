@@ -1,4 +1,12 @@
 ## Latest Update
+Jan. 19 (Sam C., Jesse F., Luis S. Marc R., Victor H.): confirmed SPI hardware communication issue with both RFM95 modules. Test procedure:
+- first tested old and new code with no success. Found issue with SPI read and write (Jan 17 update.)
+- used multimeter to confirm 3V3 becomes ~100mV across the 3V3 and GND terminals of the RFM95 chip (Jan 17).
+- Tested each pin of the SPI protocol with logic analyzers to confirm idle SPI signals (Jan 19).
+- Tested with CircuitPython and still could not initialize the RFM object (Jan 19).
+
+Concern: with a non-RFM95 object, Teensy SPI still doesn't function properly (SPI object can be created, but readings are all 0).
+
 Jan. 17 (Sam C.): organized code for compiling and uploading capability across platforms. Issue with RF95 module instantiation still exists. Suspecting that the module itself may have hardware issues, since the 3V3 voltage measured directly from the RFM95 chip (pinout here: https://www.hoperf.com/uploads/RFM96W-V2.0_1695351477.pdf) is not 3V3.
 The exact functions having issues are spiRead and spiWrite in lib/Radiohead-master/RHSPIDriver.h and lib/Radiohead-master/RHSPIDriver.cpp. The function using them can be found in lib/Radiohead-master/RH_RF95.h and lib/Radiohead-master/RH_RF95.cpp.
 
