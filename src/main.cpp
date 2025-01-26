@@ -15,6 +15,16 @@
 #define RFM95_RST    1  // "A"
 #define RFM95_IRQN   RFM69_INT
 
+/*
+ * the rest of the pins (Teensy --> Radio Module):
+ * 3V3 --> Vin
+ * G --> GND
+ * EN can be left unconnected (defaults to be shorted with Vin)
+ * SCK --> 13
+ * MISO --> 12
+ * MOSI --> 11
+ */
+
 // Define the pins for the HX711 communication (load cell)
 const uint8_t DATA_PIN = 18;  // Can use any pins!
 const uint8_t CLOCK_PIN = 19; // Can use any pins!
