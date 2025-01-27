@@ -1,4 +1,10 @@
 ## Latest Update
+Jan. 26 (Victor H., Sam C., Jesse F., Luis S., and Pete!): double-confirmed RFM95 lack of functionality, debugged load cell amplifier breakout board
+- Used oscilloscope to make sure the MISO signal isn't being pulled up
+- Commit "It was the damn regulator" - Found out the load cell amplifier's voltage regulator isn't functioning properly. When regulator bypassed and +3V3 directly supplied to chip, load cell reading works perfectly.
+
+Question: Could there be a similar issue for the RFM95?
+
 Jan. 19 (Sam C., Jesse F., Luis S. Marc R., Victor H.): confirmed SPI hardware communication issue with both RFM95 modules. Test procedure:
 - first tested old and new code with no success. Found issue with SPI read and write (Jan 17 update.)
 - used multimeter to confirm 3V3 becomes ~100mV across the 3V3 and GND terminals of the RFM95 chip (Jan 17).
