@@ -1,4 +1,6 @@
 ## Latest Update
+Jan. 29 (Sam C.): quickly updated .gitignore to ignore .vscode and its .json configuration files to avoid merge issues. Since everyone's VSCode may be configured differently.
+
 Jan. 26 (Victor H., Sam C., Jesse F., Luis S., and Pete!): double-confirmed RFM95 lack of functionality, debugged load cell amplifier breakout board
 - Used oscilloscope to make sure the MISO signal isn't being pulled up
 - Commit "It was the damn regulator" - Found out the load cell amplifier's voltage regulator isn't functioning properly. When regulator bypassed and +3V3 directly supplied to chip, load cell reading works perfectly.
