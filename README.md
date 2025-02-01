@@ -1,4 +1,6 @@
 ## Latest Update
+Jan. 31 (Victor H., Sam C., Koichi K.): Tested old Olympus PTs and found one rated for 2500 PSI working. Named it Pressi the PT.
+
 Jan. 29 (Sam C.): quickly updated .gitignore to ignore .vscode and its .json configuration files to avoid merge issues. Since everyone's VSCode may be configured differently.
 
 Jan. 26 (Victor H., Sam C., Jesse F., Luis S., and Pete!): double-confirmed RFM95 lack of functionality, debugged load cell amplifier breakout board
