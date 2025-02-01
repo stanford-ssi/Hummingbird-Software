@@ -1,4 +1,4 @@
-## WARNING FOR MEMBERS
+## WARNING FOR RADIO USE
 INSTALL ANTENNA FOR RADIO MODULES (can just be a wire) and DO NOT UNPLUG ANTENNA DURING TRANSMSISION!
 This can destroy the chip as the TX power gets reflected and has nowhere to go.
 
