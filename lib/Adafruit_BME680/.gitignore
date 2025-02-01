@@ -7,3 +7,6 @@ Doxyfile*
 doxygen_sqlite3.db
 html
 *.tmp
+
+# ignore file
+src/main.cpp
