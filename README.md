@@ -3,7 +3,7 @@ INSTALL ANTENNA FOR RADIO MODULES (can just be a wire) and DO NOT UNPLUG ANTENNA
 This can destroy the chip as the TX power gets reflected and has nowhere to go.
 
 ## Latest Update
-Jan. 31 (Victor H., Sam C., Koichi K.): Tested old Olympus PTs and found one rated for 2500 PSI working. Named it Pressi the PT. New radio modules work!
+Jan. 31 (Victor H., Sam C., Koichi K.): Tested old Olympus PTs and found one rated for 2500 PSI working. Named it Pressi the PT. New radio modules work! Also tested the MCP9600 thermocouple chip and successfully read data from a K-type thermocouple.
 
 Jan. 29 (Sam C.): quickly updated .gitignore to ignore .vscode and its .json configuration files to avoid merge issues. Since everyone's VSCode may be configured differently.
 
