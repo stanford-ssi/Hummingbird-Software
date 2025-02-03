@@ -6,6 +6,8 @@
 // level messaging abilities.
 // It is designed to work with the other example Feather9x_RX
 
+// 900Mhz_TX_Test.cpp
+
 #include "Arduino.h"
 #include <Adafruit_BME680.h>
 #include <Adafruit_I2CDevice.h>
@@ -21,7 +23,7 @@
 #define RFM95_IRQN   RFM69_INT
 
 // Change to 434.0 or other frequency, must match RX's freq!
-// #define RF95_FREQ 915.0
+// #define RF95_FREQ 434.0
 #define RF95_FREQ 915.0
 
 // Singleton instance of the radio driver
