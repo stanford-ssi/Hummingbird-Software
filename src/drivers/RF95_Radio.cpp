@@ -24,6 +24,7 @@
  */
 
 #define BAUD_RATE 9600
+
   
 // Constructor
 RF95_Radio::RF95_Radio(){
@@ -64,20 +65,20 @@ RF95_Radio::RF95_Radio(){
         */
 }
 
-void RF95_Radio::_getMessage(int bufferSize){
+void RF95_Radio::_getMessage(int bufferSize uint8_t *packet){
     const int secondBufferSize = 140;
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
 
-    if (rf95.recv(buf, &len)) {
+    if (rf95.recv(packet, &len)) {
         digitalWrite(LED_BUILTIN, HIGH);
-        RH_RF95::printBuffer("Received: ", buf, len);
+        RH_RF95::printBuffer("Received: ", packet, len);
         Serial.print("Got: ");
 
-        Serial.println((char*)buf);
+        Serial.println((char*)packet);
 
         char secondBuffer[secondBufferSize];
-        snprintf(secondBuffer, sizeof(secondBuffer), "The value of the received message is: %s\n", (char*)buf);
+        snprintf(secondBuffer, sizeof(secondBuffer), "The value of the received message is: %s\n", (char*)packet);
 
         Serial.print("RSSI: ");
         Serial.println(rf95.lastRssi(), DEC);

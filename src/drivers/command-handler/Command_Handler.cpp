@@ -1,16 +1,21 @@
 #include "Command_Handler.h"
 
-// Empty, we just need some sort of init function
 Command_Handler::Command_Handler(){
     RF95_Radio radio; 
 }
 
 void Command_Handler::_sendPacket(radio_packet_t packet){
-    radio._sendMessage(packet.packetLength, packet.message);
+    radio._sendMessage(packet.packetType, packet.packetLength, packet.message);
 }
 
 void Command_Handler::_recvPacket(int bufferSize){
-    _getMessage(bufferSize);
+    uint8_t msgBuffer[bufferSize];
+    _getMessage(bufferSize, msgBuffer);
+    
+    radio_packet_t packet;
+    //packet.packetType = ;
+    packet.packetLength = bufferSize;
+    //packet.message = ;
 }
 
 void Command_Handler::_processPacket(radio_packet_t packet){

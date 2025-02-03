@@ -1,15 +1,11 @@
 #pragma once
 
 #include "drivers/RF95_Radio.h"
+#include "drivers/radio_packet_struct.h"
 #include <string>
 
 using namespace std;
 
-typedef struct _radio_packet_t{
-    uint8_t packetType;
-    uint8_t packetLength;
-    std::string message;
-}radio_packet_t;
 
 class Command_Handler{
     public: 
