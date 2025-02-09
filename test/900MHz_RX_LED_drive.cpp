@@ -36,7 +36,8 @@ void setup() {
 
 
   while (!Serial) delay(1);
-      Serial.println("initialiing SD card");
+    /*
+    Serial.println("initialiing SD card");
     if (!SD.begin(chipSelect)){
 
 
@@ -45,6 +46,7 @@ void setup() {
     }
     Serial.println("initialization done");
     delay(100);
+    */
      myFile = SD.open("sensorData.txt", FILE_WRITE);
     Serial.println("Feather LoRa RX Test!");
 
@@ -97,7 +99,7 @@ void loop() {
       snprintf(buffer1, sizeof(buffer1), "The value of the received message is: %s\n", (char*)buf);
 
       // checking for command receiving
-      if (strcmp(buffer1, "toggle") == 0) {
+      if (strncmp(buffer1, "toggle", 6) == 0) {
         int cur_state = digitalRead(LED_PIN);
         digitalWrite(LED_PIN, !cur_state);
         Serial.println("toggling...");
