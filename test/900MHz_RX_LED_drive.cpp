@@ -47,7 +47,7 @@ void setup() {
     Serial.println("initialization done");
     delay(100);
     */
-     myFile = SD.open("sensorData.txt", FILE_WRITE);
+    // myFile = SD.open("sensorData.txt", FILE_WRITE);
     Serial.println("Feather LoRa RX Test!");
 
     // manual reset
@@ -98,16 +98,24 @@ void loop() {
       char buffer1[140];
       snprintf(buffer1, sizeof(buffer1), "The value of the received message is: %s\n", (char*)buf);
 
+      char buffer_char[140];
+      snprintf(buffer_char, sizeof(buf), "%s\n", (char*)buf);
+      Serial.print("buffer: ");
+      Serial.println(buffer_char);
+      Serial.println(strncmp(buffer_char, "toggle", 6));
+
       // checking for command receiving
-      if (strncmp(buffer1, "toggle", 6) == 0) {
+      char buf_to_comp_to[6] = {'t', 'o', 'g', 'g', 'l', 'e'};
+      if (strncmp(buffer_char, buf_to_comp_to, 6) == 0) {
         int cur_state = digitalRead(LED_PIN);
         digitalWrite(LED_PIN, !cur_state);
         Serial.println("toggling...");
       }
-
+      /*
     // writing to the SD card
      myFile.write(buffer1);
     myFile.flush();
+      */
 
        Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
