@@ -24,7 +24,7 @@
  */
 
 #define BAUD_RATE 9600
-
+#define ACK_BYTE !
   
 // Constructor
 RF95_Radio::RF95_Radio(){
@@ -65,11 +65,33 @@ RF95_Radio::RF95_Radio(){
         */
 }
 
-void RF95_Radio::_getMessage(int bufferSize uint8_t *packet){
+void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     const int secondBufferSize = 140;
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
 
+    // Receive packet type
+    uint8_t packet_type[sizeof(uint8_t)];
+    uint8_t packet_type_len = sizeof(packet_type);
+    if (rf95.recv(packet_type, packet_type_len)){
+        Serial.println("Received packet type, storing packet type...");
+        packet->packetType = packet_type[0];
+    }
+    
+    uint8_t packet_length[sizeof(uint8_t)];
+    uint8_t packet_length_len = sizeof(packet_length);
+    if (rf95.recv(packet_length, packet_length_len)){
+        Serial.println("Received packet length, storing packet type...");
+        packet->packetLength = packet_length[0];
+    }
+    
+    // TODO: Store the message into the radio_packet_t->*message. Forgot how to do it
+
+    delay(500);
+
+    _sendACK();
+
+    /*
     if (rf95.recv(packet, &len)) {
         digitalWrite(LED_BUILTIN, HIGH);
         RH_RF95::printBuffer("Received: ", packet, len);
@@ -87,21 +109,48 @@ void RF95_Radio::_getMessage(int bufferSize uint8_t *packet){
     } else {
         Serial.println("Receive failed!");
     } 
+    */
 }
 
-void RF95_Radio::_sendMessage(uint8_t packetLength, std::string message){
+void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t radio_packet){
     const uint8_t NULL_SPACE = 1;
 
     delay(1000); // Delay added for each transmission
     
-    char packet[packetLength + NULL_SPACE] = "";
-    for (int i = 0; i < packetLength; i++){
-        packet[i] = message[i];
+    // Send packetType
+    Serial.println("Transmitting packet type...");
+    rf95.send((uint8_t *) packetType, 1);
+    rf95.waitPacketSent();
+
+    delay(500);
+
+    // Send packetLength
+    Serial.println("Transmitting packet length...");
+    rf95.send((uint8_t *) packetLength, 1);
+    rf95.waitPacketSent();
+    
+    delay(500);
+
+    // Sending message 
+    Serial.println("Transmitting message...");
+    rf95.send(message, packetLength);
+    rf95.waitPacketSent();
+    
+    delay(500);
+
+    // Wait for ACK that all parts were sent
+    for (int i = 0; i < 3; i++){
+        uint8_t buf[10];
+        uint8_t len = sizeof(buf);
+        
+        // Receive the ACK
+        if (rf95.recv(buf, &len)){
+            Serial.println("Transmission succesful, ACK received...");
+            return;
+        }
     }
     
-    Serial.println("Transmitting...");
-    
-
+    Serial.println("Transmission unsuccesful...");
 }
 
 void RF95_Radio::_changeFrequency(double freq){
@@ -113,7 +162,7 @@ void RF95_Radio::_changeFrequency(double freq){
 
 void RF95_Radio::_sendACK(){
     // ACK message
-    uint8_t data[] = "And hello back to you";
+    uint8_t data = ACK_BYTE;
     
     // Sending the packet
     rf95.send(data, sizeof(data));
