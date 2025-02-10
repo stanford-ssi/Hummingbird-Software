@@ -70,21 +70,26 @@ void setup() {
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 void loop() {
-  delay(1000); // Wait 1 second between transmits, could also 'sleep' here!
-  Serial.println("Transmitting..."); // Send a message to rf95_server
+  Serial.println("Enter message to send:");
+  while (Serial.available() == 0) {
+    // Wait for user input
+  }
+  
+  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+  int index = 0;
 
-  char radiopacket[20] = "toggle\0 #      ";
-  itoa(packetnum++, radiopacket+13, 10);
-  Serial.print("Sending "); Serial.println(radiopacket);
-  radiopacket[19] = 0;
+  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+    char c = Serial.read();
+    if (c == '\n') break;  // Stop reading at newline
+    radiopacket[index++] = c;
+  }
+  radiopacket[index] = '\0';  // Null-terminate the string
 
-  Serial.println("Sending...");
-  delay(10);
-  rf95.send((uint8_t *)radiopacket, 20);
-
-  Serial.println("Waiting for packet to complete...");
-  delay(10);
+  Serial.print("Sending: "); Serial.println(radiopacket);
+  rf95.send((uint8_t *)radiopacket, index + 1);
   rf95.waitPacketSent();
+  Serial.println("Message sent!");
+
   // Now wait for a reply
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
@@ -103,5 +108,4 @@ void loop() {
   } else {
     Serial.println("No reply, is there a listener around?");
   }
-
 }
