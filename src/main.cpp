@@ -109,7 +109,8 @@ void loop() {
       if (strncmp(buffer_char, buf_to_comp_to, 6) == 0) {
         int cur_state = digitalRead(LED_PIN);
         digitalWrite(LED_PIN, !cur_state);
-        Serial.println("toggling...");
+        Serial.print("toggling...");
+        Serial.println(digitalRead(LED_PIN));
       }
       /*
     // writing to the SD card
@@ -119,15 +120,24 @@ void loop() {
 
        Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
-
-      // Send a reply
-      uint8_t data[] = "And hello back to you";
-      rf95.send(data, sizeof(data));
-      rf95.waitPacketSent();
-      Serial.println("Sent a reply");
-      digitalWrite(LED_BUILTIN, LOW);
-    } else {
-      Serial.println("Receive failed");
     }
-  }
+
+    /*
+    // Send a reply
+    char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+    int index = 0;
+
+    while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+      char c = Serial.read();
+      if (c == '\n') break;  // Stop reading at newline
+      radiopacket[index++] = c;
+    }
+    radiopacket[index] = '\0';  // Null-terminate the string
+
+    Serial.print("Sending: "); Serial.println(radiopacket);
+    rf95.send((uint8_t *)radiopacket, index + 1);
+    rf95.waitPacketSent();
+    Serial.println("Message sent!");
+    */
+    }
 }
