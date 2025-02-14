@@ -13,7 +13,7 @@
 #include <Adafruit_Sensor.h>
 #include <SPI.h>
 #include <RH_RF95.h>
-#include "radio_packet_struct.h"
+#include "macros.h"
 #include <string>
 
 using namespace std;
