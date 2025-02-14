@@ -86,6 +86,14 @@ bool validate_check_byte(uint8_t *sync_bytes, uint8_t len, uint8_t byte_ref){
     return false;
 }
 
+void _sendSync(){
+    uint8_t data = SYNC_BYTE;
+    
+    // Sending the packet
+    rf95.send(data, sizeof(data));
+    rf95.waitPacketSent();
+}
+
 bool _receiveSyn(){
     // Buffer for the sync bytes
     uint8_t sync_bytes[RF_RH95_MAX_MESSAGE_LEN];
@@ -102,6 +110,7 @@ bool _receiveSyn(){
 
     return false;
 }
+
 
 bool _receiveAck(){
     // Buffer for the sync bytes
@@ -127,10 +136,6 @@ void _storeMessage(uint8_t *message, radio_packet_t *packet, int len){
 }
 
 void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
-    const int secondBufferSize = 140;
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
-
     // Syncing the radios
     // Given that the _getMessage function will always
     // be called, this sync function is continually going
@@ -177,7 +182,32 @@ void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
 }
 
 void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t radio_packet){
-    // TODO: Re-implement _sendMessage to fit the _getMessage
+    // Syncing the radios together
+    _sendSync();
+    if (!_receiveAck()){
+        Serial.println("Sync was not acknowledged!");
+    }
+
+    // Sending the packet type
+    rf95.send(radio_packet->packetType, sizeof(uint8_t));
+    rf95.waitPacketSent();
+    if (!_receiveAck()){
+        Serial.println("Packet type was not acknowledged!");
+    }
+   
+    // Sending the packet length
+    rf95.send(radio_packet->packetLength, sizeof(uint8_t));
+    rf95.waitPacketSent();
+    if (!_receiveAck()){
+        Serial.println("Packet length was not acknowledged!");
+    }
+
+    // Sending the packet message
+    rf95.send((uint8_t *)radio_packet->message, radio_packet->packetLength);
+    rf95.waitPacketSent();
+    if (!_receiveAck()){
+        Serial.println("Packet message was not acknowledged!");
+    }
 }
 
 void RF95_Radio::_changeFrequency(double freq){
