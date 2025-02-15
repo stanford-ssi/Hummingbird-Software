@@ -32,10 +32,10 @@ void setup() {
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
-  Serial.begin(9600);
+  Serial.begin(0);
+  delay(2'000);
 
-
-  while (!Serial) delay(1);
+  // while (!Serial) delay(1);
     /*
     Serial.println("initialiing SD card");
     if (!SD.begin(chipSelect)){
@@ -82,6 +82,8 @@ void setup() {
 }
 
 void loop() {
+  Serial.begin(0);
+  
   if (rf95.available()) {
     // Should be a message for us now
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
@@ -112,6 +114,7 @@ void loop() {
         Serial.print("toggling...");
         Serial.println(digitalRead(LED_PIN));
       }
+    }
       /*
     // writing to the SD card
      myFile.write(buffer1);
@@ -121,20 +124,20 @@ void loop() {
        Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
 
-  // Send a reply
-  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-  int index = 0;
+    // Send a reply
+    char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+    int index = 0;
 
-  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
-    char c = Serial.read();
-    if (c == '\n') break;  // Stop reading at newline
-    radiopacket[index++] = c;
-  }
-  radiopacket[index] = '\0';  // Null-terminate the string
+    while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+      char c = Serial.read();
+      if (c == '\n') break;  // Stop reading at newline
+      radiopacket[index++] = c;
+    }
+    radiopacket[index] = '\0';  // Null-terminate the string
 
-  Serial.print("Sending: "); Serial.println(radiopacket);
-  rf95.send((uint8_t *)radiopacket, index + 1);
-  rf95.waitPacketSent();
-  Serial.println("Message sent!");
-  }
+    Serial.print("Sending: "); Serial.println(radiopacket);
+    rf95.send((uint8_t *)radiopacket, index + 1);
+    rf95.waitPacketSent();
+    Serial.println("Message sent!");
+    }
 }
