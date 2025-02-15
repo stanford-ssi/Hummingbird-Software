@@ -6,6 +6,8 @@
  */
 
 #include "RF95_Radio.h"
+#include "arduino_freertos.h"
+#include "avr/pgmspace.h"
 
 // Custom pinout for teensy 4.1
 #define RFM95_CS     10 // CS on module
