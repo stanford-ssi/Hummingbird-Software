@@ -25,7 +25,6 @@
 
 #define BAUD_RATE 9600
 
-using namespace arduino;
   
 // Constructor
 RF95_Radio::RF95_Radio(){
@@ -38,7 +37,7 @@ RF95_Radio::RF95_Radio(){
     // this is not part of the original code and does nothing at the moment.
     // pin 1 is RFM95_RST (reset pin), which, when pulled low, should activate the radio module
     // but here it's not working for some reason
-    digitalWrite(1, LOW);   // test
+    digitalWrite(1, arduino::LOW);   // test
 
     // Initialize RF95
     // THIS IS WHERE THE CODE IS FAILING
@@ -72,7 +71,7 @@ void RF95_Radio::_getMessage(int bufferSize){
     uint8_t len = sizeof(buf);
 
     if (rf95.recv(buf, &len)) {
-        digitalWrite(LED_BUILTIN, HIGH);
+        digitalWrite(arduino::LED_BUILTIN, arduino::HIGH);
         RH_RF95::printBuffer("Received: ", buf, len);
         Serial.print("Got: ");
 
@@ -82,7 +81,7 @@ void RF95_Radio::_getMessage(int bufferSize){
         snprintf(secondBuffer, sizeof(secondBuffer), "The value of the received message is: %s\n", (char*)buf);
 
         Serial.print("RSSI: ");
-        Serial.println(rf95.lastRssi(), DEC);
+        Serial.println(rf95.lastRssi(), arduino::DEC);
 
         _sendACK();
     } else {
@@ -120,5 +119,5 @@ void RF95_Radio::_sendACK(){
     rf95.send(data, sizeof(data));
     rf95.waitPacketSent();
     Serial.println("Sent a reply");
-    digitalWrite(LED_BUILTIN, LOW);
+    digitalWrite(arduino::LED_BUILTIN, arduino::LOW);
 }
