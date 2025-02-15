@@ -16,6 +16,10 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
+// arduino freertos library inclusion
+#include "arduino_freertos.h"
+#include "avr/pgmspace.h"
+
 // Custom pinout for teensy 4.1
 #define RFM95_CS     10  // "B"
 #define RFM95_INT    0 // "C"
@@ -28,6 +32,69 @@
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+// define mutex for locking Serial
+static SemaphoreHandle_t mutex;
+
+// this task handles the sending of radio packets
+void radioSendTask(void *) {
+  
+  Serial.println("Enter message to send:");
+  while (Serial.available() == 0) {
+    // Wait for user input
+  }
+  
+  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+  int index = 0;
+
+
+  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+    char c = Serial.read();
+    if (c == '\n') break;  // Stop reading at newline
+    radiopacket[index++] = c;
+  }
+  radiopacket[index] = '\0';  // Null-terminate the string
+
+  // critical section to protect the Serial peripheral
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  Serial.print("Sending: "); Serial.println(radiopacket);
+  rf95.send((uint8_t *)radiopacket, index + 1);
+  rf95.waitPacketSent();
+  Serial.println("Message sent!");
+  xSemaphoreGive(mutex);
+  
+}
+
+// this task handles the reading of pressure transducers
+void radioReceiveTask(void *) {
+
+  // Now wait for a reply
+  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+  xSemaphoreTake(mutex, portMAX_DELAY);
+  Serial.println("Waiting for reply...");
+  xSemaphoreGive(mutex);
+  if (rf95.waitAvailableTimeout(1000)) {
+    // Should be a reply message for us now
+    if (rf95.recv(buf, &len)) {
+      xSemaphoreTake(mutex, portMAX_DELAY);
+      Serial.print("Got reply: ");
+      Serial.println((char*)buf);
+      Serial.print("RSSI: ");
+      Serial.println(rf95.lastRssi(), DEC);
+      xSemaphoreGive(mutex);
+    } else {
+      xSemaphoreTake(mutex, portMAX_DELAY);
+      Serial.println("Receive failed");
+      xSemaphoreGive(mutex);
+    }
+  } else {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    Serial.println("No reply, is there a listener around?");
+    xSemaphoreGive(mutex);
+  }
+
+}
 
 void setup() {
   pinMode(RFM95_RST, OUTPUT);
@@ -65,47 +132,33 @@ void setup() {
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
+
+  // the remaining is FreeRTOS setup
+  /*
+  BaseType_t xTaskCreate( TaskFunction_t pvTaskCode,
+                         const char * const pcName,
+                         const configSTACK_DEPTH_TYPE uxStackDepth,
+                         void *pvParameters,
+                         UBaseType_t uxPriority,
+                         TaskHandle_t *pxCreatedTask
+                       );
+  */
+
+  // configuring pins for PT reading
+  pinMode(A0, INPUT); // suppose we have 2 PTs
+  pinMode(A1, INPUT);
+
+  xTaskCreate(radioSendTask, "radioSendTask", 1024, nullptr, 2, nullptr);  // priority 2
+  xTaskCreate(radioReceiveTask, "radioReceiveTask", 1024, nullptr, 1, nullptr);    // priority 1
+
+  Serial.println("setup(): starting scheduler...");
+  Serial.flush();
+
+  vTaskStartScheduler();
 }
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 void loop() {
-  Serial.println("Enter message to send:");
-  while (Serial.available() == 0) {
-    // Wait for user input
-  }
-  
-  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-  int index = 0;
-
-  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
-    char c = Serial.read();
-    if (c == '\n') break;  // Stop reading at newline
-    radiopacket[index++] = c;
-  }
-  radiopacket[index] = '\0';  // Null-terminate the string
-
-  Serial.print("Sending: "); Serial.println(radiopacket);
-  rf95.send((uint8_t *)radiopacket, index + 1);
-  rf95.waitPacketSent();
-  Serial.println("Message sent!");
-
-  // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-
-  Serial.println("Waiting for reply...");
-  if (rf95.waitAvailableTimeout(1000)) {
-    // Should be a reply message for us now
-    if (rf95.recv(buf, &len)) {
-      Serial.print("Got reply: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-    } else {
-      Serial.println("Receive failed");
-    }
-  } else {
-    Serial.println("No reply, is there a listener around?");
-  }
+  while (1);  // may or may not be needed
 }
