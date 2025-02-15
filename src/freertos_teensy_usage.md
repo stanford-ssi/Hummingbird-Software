@@ -6,7 +6,7 @@ Last updated: Feb. 14, 2025 by Sam C.
 ```
 And the next time you pull from GitHub, you cancdo 
 ```
-git pull --recursive-submodules
+> git pull --recursive-submodules
 ``` 
 to ensure that the submodule is up to date. See this website for more details: https://gist.github.com/gitaarik/8735255
 
@@ -14,7 +14,7 @@ to ensure that the submodule is up to date. See this website for more details: h
 
 3. Different FreeRTOS functions require different libraries to be included. For example, to use mutexes and semaphores, you need to include "semphr.h". Check ```freertos-teensy-lib/src``` to see which files should be added.
 
-4. The FreeRTOS library also does a weird thing with code that blocks until ```Serial``` is available. Including any form of code of this sort basically stalls the program forever. So you want to avoid any calls like ```while (!(Serial.available()))``` in your ```void setup()``` function. Also, in ```void setup()``` and every task you want to run Serial in (see point 4), initialize ```Serial``` by:
+4. The FreeRTOS library also does a weird thing with code that blocks until ```Serial``` is available. Including any form of code of this sort basically stalls the program forever. So you want to avoid any calls like ```while (!(Serial.available()))``` in your ```void setup()``` function. Also, in ```void setup()``` and every task you want to run Serial in (see point 5), initialize ```Serial``` by:
 ```
 Serial.begin(0);
 delay(2'000);
