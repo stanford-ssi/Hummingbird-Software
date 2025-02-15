@@ -19,6 +19,7 @@
 // arduino freertos library inclusion
 #include "arduino_freertos.h"
 #include "avr/pgmspace.h"
+#include "semphr.h"
 
 // Custom pinout for teensy 4.1
 #define RFM95_CS     10  // "B"
@@ -30,8 +31,12 @@
 // #define RF95_FREQ 434.0
 #define RF95_FREQ 915.0
 
+using namespace arduino;
+
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
+int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 // define mutex for locking Serial
 static SemaphoreHandle_t mutex;
@@ -39,7 +44,9 @@ static SemaphoreHandle_t mutex;
 // this task handles the sending of radio packets
 void radioSendTask(void *) {
   
+  xSemaphoreTake(mutex, portMAX_DELAY);
   Serial.println("Enter message to send:");
+  xSemaphoreGive(mutex);
   while (Serial.available() == 0) {
     // Wait for user input
   }
@@ -96,11 +103,13 @@ void radioReceiveTask(void *) {
 
 }
 
-void setup() {
+FLASHMEM __attribute__((noinline)) void setup() {
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
-  Serial.begin(9600);
+  Serial.begin(0);
+  delay(2'000);
+
   while (!Serial) delay(1);
   delay(100);
 
@@ -144,9 +153,9 @@ void setup() {
                        );
   */
 
-  // configuring pins for PT reading
-  pinMode(A0, INPUT); // suppose we have 2 PTs
-  pinMode(A1, INPUT);
+  /*
+  // create mutex before starting tasks
+  mutex = xSemaphoreCreateMutex();
 
   xTaskCreate(radioSendTask, "radioSendTask", 1024, nullptr, 2, nullptr);  // priority 2
   xTaskCreate(radioReceiveTask, "radioReceiveTask", 1024, nullptr, 1, nullptr);    // priority 1
@@ -155,10 +164,7 @@ void setup() {
   Serial.flush();
 
   vTaskStartScheduler();
+  */
 }
 
-int16_t packetnum = 0;  // packet counter, we increment per xmission
-
-void loop() {
-  while (1);  // may or may not be needed
-}
+void loop() {}

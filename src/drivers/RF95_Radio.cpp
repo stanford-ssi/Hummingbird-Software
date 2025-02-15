@@ -24,6 +24,8 @@
  */
 
 #define BAUD_RATE 9600
+
+using namespace arduino;
   
 // Constructor
 RF95_Radio::RF95_Radio(){
