@@ -3,7 +3,17 @@ INSTALL ANTENNA FOR RADIO MODULES (can just be a wire) and DO NOT UNPLUG ANTENNA
 This can destroy the chip as the TX power gets reflected and has nowhere to go.
 
 ## Latest Update
-Feb. 3 (Jesse F., Marc R., Luis S., and Pete!) Began developing classes for sending and receiving packets via the LoRa radio, and using the SD card to log data. Tested using the MCP9600 and ICM20948 together over I2C and transmitting the data
+Feb. 14 (Victor H., Sam C., Jesse F., Arif I., and Pete!): Implemented multithreading for radio TX_LED drive code. Issue: after some number of fast sends, the program stalls. But generally ok if sending slowly. 
+
+Potential culprits:
+1) Race condition
+2) waitPacketSent crashing (most likely). 
+
+Potential fixes:
+1) have 1 thread running each send
+2) implement error checking condition to shut off system if error occurred
+
+Feb. 3 (Jesse F., Marc R., Luis S., and Pete!): Began developing classes for sending and receiving packets via the LoRa radio, and using the SD card to log data. Tested using the MCP9600 and ICM20948 together over I2C and transmitting the data
 
 Question: What should the format of the packets look like? (Header, type, payload, checksum, etc);
 
