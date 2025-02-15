@@ -9,6 +9,11 @@
 #include <RH_RF95.h>
 #include <SD.h>
 
+// arduino freertos library inclusion
+#include "arduino_freertos.h"
+#include "avr/pgmspace.h"
+#include "semphr.h"
+
 // standard C library
 #include <string.h>
 
@@ -28,12 +33,12 @@ const int chipSelect = BUILTIN_SDCARD;
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 File myFile;
 void setup() {
+  Serial.begin(0);
+  delay(2'000);
+  
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
-
-  Serial.begin(0);
-  delay(2'000);
 
   // while (!Serial) delay(1);
     /*
@@ -83,7 +88,7 @@ void setup() {
 
 void loop() {
   Serial.begin(0);
-  
+
   if (rf95.available()) {
     // Should be a message for us now
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];

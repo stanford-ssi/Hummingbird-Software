@@ -166,7 +166,7 @@ FLASHMEM __attribute__((noinline)) void setup() {
   // create mutex before starting tasks
   mutex = xSemaphoreCreateMutex();
 
-  xTaskCreate(radioSendTask, "radioSendTask", 128, NULL, 2, NULL);  // priority 2
+  xTaskCreate(radioSendTask, "radioSendTask", 128, NULL, 1, NULL);  // priority 2
   xTaskCreate(radioReceiveTask, "radioReceiveTask", 128, NULL, 1, NULL);    // priority 1
 
   Serial.println("setup(): starting scheduler...");
