@@ -31,110 +31,120 @@
 // #define RF95_FREQ 434.0
 #define RF95_FREQ 915.0
 
-using namespace arduino;
-
 // Singleton instance of the radio driver
-RH_RF95 rf95(RFM95_CS, RFM95_INT);
+static RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
-int16_t packetnum = 0;  // packet counter, we increment per xmission
+static int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 // define mutex for locking Serial
 static SemaphoreHandle_t mutex;
 
 // this task handles the sending of radio packets
-void radioSendTask(void *) {
+static void radioSendTask(void *param) {
+  Serial.begin(0);
   
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  Serial.println("Enter message to send:");
-  xSemaphoreGive(mutex);
-  while (Serial.available() == 0) {
-    // Wait for user input
+  while (1) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    Serial.println("Enter message to send:");
+    xSemaphoreGive(mutex);
+    while (Serial.available() == 0) {
+      // Wait for user input
+    }
+    
+    char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+    int index = 0;
+
+    while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+      char c = Serial.read();
+      if (c == '\n') break;  // Stop reading at newline
+      radiopacket[index++] = c;
+    }
+    radiopacket[index] = '\0';  // Null-terminate the string
+
+    // critical section to protect the Serial peripheral
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    Serial.print("Sending: "); Serial.println(radiopacket);
+    rf95.send((uint8_t *)radiopacket, index + 1);
+    rf95.waitPacketSent();
+    Serial.println("Message sent!");
+    xSemaphoreGive(mutex);
   }
-  
-  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-  int index = 0;
-
-
-  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
-    char c = Serial.read();
-    if (c == '\n') break;  // Stop reading at newline
-    radiopacket[index++] = c;
-  }
-  radiopacket[index] = '\0';  // Null-terminate the string
-
-  // critical section to protect the Serial peripheral
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  Serial.print("Sending: "); Serial.println(radiopacket);
-  rf95.send((uint8_t *)radiopacket, index + 1);
-  rf95.waitPacketSent();
-  Serial.println("Message sent!");
-  xSemaphoreGive(mutex);
-  
 }
 
 // this task handles the reading of pressure transducers
-void radioReceiveTask(void *) {
-
-  // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-  xSemaphoreTake(mutex, portMAX_DELAY);
-  Serial.println("Waiting for reply...");
-  xSemaphoreGive(mutex);
-  if (rf95.waitAvailableTimeout(1000)) {
-    // Should be a reply message for us now
-    if (rf95.recv(buf, &len)) {
-      xSemaphoreTake(mutex, portMAX_DELAY);
-      Serial.print("Got reply: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-      xSemaphoreGive(mutex);
+static void radioReceiveTask(void *param) {  
+  Serial.begin(0);
+  
+  while (1) {
+    // Now wait for a reply
+    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    Serial.println("Waiting for reply...");
+    xSemaphoreGive(mutex);
+    if (rf95.waitAvailableTimeout(1000)) {
+      // Should be a reply message for us now
+      if (rf95.recv(buf, &len)) {
+        xSemaphoreTake(mutex, portMAX_DELAY);
+        Serial.print("Got reply: ");
+        Serial.println((char*)buf);
+        Serial.print("RSSI: ");
+        Serial.println(rf95.lastRssi(), arduino::DEC);
+        xSemaphoreGive(mutex);
+      } else {
+        xSemaphoreTake(mutex, portMAX_DELAY);
+        Serial.println("Receive failed");
+        xSemaphoreGive(mutex);
+      }
     } else {
       xSemaphoreTake(mutex, portMAX_DELAY);
-      Serial.println("Receive failed");
+      Serial.println("No reply, is there a listener around?");
       xSemaphoreGive(mutex);
     }
-  } else {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    Serial.println("No reply, is there a listener around?");
-    xSemaphoreGive(mutex);
   }
 
 }
 
 FLASHMEM __attribute__((noinline)) void setup() {
-  pinMode(RFM95_RST, OUTPUT);
-  digitalWrite(RFM95_RST, HIGH);
-
   Serial.begin(0);
   delay(2'000);
+  
+  pinMode(RFM95_RST, arduino::OUTPUT);
+  digitalWrite(RFM95_RST, arduino::HIGH);
 
-  while (!Serial) delay(1);
-  delay(100);
+  /*while (!Serial) delay(1);
+  delay(100);*/
 
   Serial.println("Feather LoRa TX Test!");
+  Serial.flush();
 
   // manual reset
-  digitalWrite(RFM95_RST, LOW);
+  digitalWrite(RFM95_RST, arduino::LOW);
   delay(10);
-  digitalWrite(RFM95_RST, HIGH);
+  digitalWrite(RFM95_RST, arduino::HIGH);
   delay(10);
 
   while (!rf95.init()) {
     Serial.println("LoRa radio init failed");
+    Serial.flush();
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+    Serial.flush();
     while (1);
   }
   Serial.println("LoRa radio init OK!");
+  Serial.flush();
 
   // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println("setFrequency failed");
+    Serial.flush();
     while (1);
   }
-  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
-
+  Serial.print("Set Freq to: "); 
+  Serial.flush();
+  Serial.println(RF95_FREQ);
+  Serial.flush();
+  
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
   // The default transmitter power is 13dBm, using PA_BOOST.
@@ -153,18 +163,16 @@ FLASHMEM __attribute__((noinline)) void setup() {
                        );
   */
 
-  /*
   // create mutex before starting tasks
   mutex = xSemaphoreCreateMutex();
 
-  xTaskCreate(radioSendTask, "radioSendTask", 1024, nullptr, 2, nullptr);  // priority 2
-  xTaskCreate(radioReceiveTask, "radioReceiveTask", 1024, nullptr, 1, nullptr);    // priority 1
+  xTaskCreate(radioSendTask, "radioSendTask", 128, NULL, 2, NULL);  // priority 2
+  xTaskCreate(radioReceiveTask, "radioReceiveTask", 128, NULL, 1, NULL);    // priority 1
 
   Serial.println("setup(): starting scheduler...");
   Serial.flush();
 
   vTaskStartScheduler();
-  */
 }
 
 void loop() {}
