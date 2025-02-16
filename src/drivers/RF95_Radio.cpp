@@ -24,8 +24,8 @@
  */
 
 #define BAUD_RATE 9600
-#define ACK_BYTE !
-#define SYNC_BYTE $
+#define ACK_BYTE '!'
+#define SYNC_BYTE '$'
 #define MAX_SYNC_TRIES 3
 
 // Constructor
@@ -86,17 +86,17 @@ bool validate_check_byte(uint8_t *sync_bytes, uint8_t len, uint8_t byte_ref){
     return false;
 }
 
-void _sendSync(){
+void RF95_Radio::_sendSync(){
     uint8_t data = SYNC_BYTE;
     
     // Sending the packet
-    rf95.send(data, sizeof(data));
+    rf95.send((uint8_t *)data, sizeof(data));
     rf95.waitPacketSent();
 }
 
-bool _receiveSyn(){
+bool RF95_Radio::_receiveSyn(){
     // Buffer for the sync bytes
-    uint8_t sync_bytes[RF_RH95_MAX_MESSAGE_LEN];
+    uint8_t sync_bytes[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(sync_bytes);
 
     for (int i = 0; i < MAX_SYNC_TRIES; i++){
@@ -112,9 +112,9 @@ bool _receiveSyn(){
 }
 
 
-bool _receiveAck(){
+bool RF95_Radio::_receiveAck(){
     // Buffer for the sync bytes
-    uint8_t ack_bytes[RF_RH95_MAX_MESSAGE_LEN];
+    uint8_t ack_bytes[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(ack_bytes);
 
     for (int i = 0; i < MAX_SYNC_TRIES; i++){
@@ -148,9 +148,9 @@ void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     _sendACK();
 
     // Receive packet type
-    uint8_t packet_type[RF_RH95_MAX_MESSAGE_LEN];
+    uint8_t packet_type[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t packet_type_len = sizeof(packet_type);
-    if (rf95.recv(packet_type, packet_type_len)){
+    if (rf95.recv(packet_type, &packet_type_len)){
         Serial.println("Received packet type, storing packet type...");
         packet->packetType = packet_type[0];
     }
@@ -159,9 +159,9 @@ void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     _sendACK();
     
     // Receive packet len
-    uint8_t packet_length[RF_RH95_MAX_MESSAGE_LEN];
+    uint8_t packet_length[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t packet_length_len = sizeof(packet_length);
-    if (rf95.recv(packet_length, packet_length_len)){
+    if (rf95.recv(packet_length, &packet_length_len)){
         Serial.println("Received packet length, storing packet type...");
         packet->packetLength = packet_length[0];
     }
@@ -170,18 +170,18 @@ void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     _sendACK();
     
     // Receive packet message
-    uint8_t packet_message[RF_RH95_MAX_MESSAGE_LEN];
+    uint8_t packet_message[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t packet_message_len = sizeof(packet_message);
-    if (rf95.recv(packet_message, packet_message_len)){
+    if (rf95.recv(packet_message, &packet_message_len)){
         Serial.println("Received packet message, storing packet message..");
-        _storeMessage(packet_message, packet);
+        _storeMessage(packet_message, packet, packet_message_len);
     }
 
     // Send ACK that we received the message
     _sendACK();
 }
 
-void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t radio_packet){
+void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t *radio_packet){
     // Syncing the radios together
     _sendSync();
     if (!_receiveAck()){
@@ -189,14 +189,14 @@ void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t radio_packet)
     }
 
     // Sending the packet type
-    rf95.send(radio_packet->packetType, sizeof(uint8_t));
+    rf95.send((uint8_t *)radio_packet->packetType, sizeof(uint8_t));
     rf95.waitPacketSent();
     if (!_receiveAck()){
         Serial.println("Packet type was not acknowledged!");
     }
    
     // Sending the packet length
-    rf95.send(radio_packet->packetLength, sizeof(uint8_t));
+    rf95.send((uint8_t *)radio_packet->packetLength, sizeof(uint8_t));
     rf95.waitPacketSent();
     if (!_receiveAck()){
         Serial.println("Packet length was not acknowledged!");
@@ -222,6 +222,6 @@ void RF95_Radio::_sendACK(){
     uint8_t data = ACK_BYTE;
     
     // Sending the packet
-    rf95.send(data, sizeof(data));
+    rf95.send((uint8_t *)data, sizeof(data));
     rf95.waitPacketSent();
 }

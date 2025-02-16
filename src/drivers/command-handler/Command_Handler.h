@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/RF95_Radio.h"
-#include "drivers/radio_packet_struct.h"
+#include "drivers/macros.h"
 #include <string>
 
 using namespace std;
@@ -25,4 +25,4 @@ class Command_Handler{
     private:
         /* Returns  */
         radio_packet_t _encodeProcess(uint8_t packetType, uint8_t packetLength, std::string message);
-}
+};

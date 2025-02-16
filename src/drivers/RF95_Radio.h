@@ -25,20 +25,26 @@ public:
     RF95_Radio();
 
     /* Tries to find the message, and prints out the message's output */
-    void _getMessage(int bufferSize);
+    void _getMessage(int bufferSize, radio_packet_t *packet);
 
     /* Sends a message to the receiving radio */
-    void _sendMessage(uint8_t packetLength, std::string message);
+    void _sendMessage(uint8_t packetLength, radio_packet_t *packet);
 
     /* Changes the radio's frequency*/
     void _changeFrequency(double freq);
 
-private:
-    /* Returns an ACK to the transmitter */
-    void _sendACK();
+    void _sendSync();
+
+    bool _receiveSyn();
+
+    bool _receiveAck();    
 
     /* Singleton instance of the radio driver */
     RH_RF95 rf95;
+
+private:
+    /* Returns an ACK to the transmitter */
+    void _sendACK();
 
     /* Radio frequency */
     double RF95_FREQ = 0;
