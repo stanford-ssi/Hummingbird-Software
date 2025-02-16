@@ -1,4 +1,12 @@
-// 900Mhz_RX_Test.cpp
+// Feather9x_TX
+// -*- mode: C++ -*-
+// Example sketch showing how to create a simple messaging client (transmitter)
+// with the RH_RF95 class. RH_RF95 class does not provide for addressing or
+// reliability, so you should only use RH_RF95 if you do not need the higher
+// level messaging abilities.
+// It is designed to work with the other example Feather9x_RX
+
+// 900Mhz_TX_Test.cpp
 
 #include "Arduino.h"
 #include <Adafruit_BME680.h>
@@ -7,13 +15,8 @@
 #include "Wire.h"
 #include <SPI.h>
 #include <RH_RF95.h>
-#include <SD.h>
 
-// standard C library
-#include <string.h>
-
-// LED pin definition
-#define LED_PIN 6
+#include <strings.h>
 
 // Custom pinout for teensy 4.1
 #define RFM95_CS     10  // "B"
@@ -22,39 +25,27 @@
 #define RFM95_IRQN   RFM69_INT
 
 // Change to 434.0 or other frequency, must match RX's freq!
+// #define RF95_FREQ 434.0
 #define RF95_FREQ 915.0
-const int chipSelect = BUILTIN_SDCARD;
+
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
-File myFile;
+
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(9600);
-
-
   while (!Serial) delay(1);
-    /*
-    Serial.println("initialiing SD card");
-    if (!SD.begin(chipSelect)){
+  delay(100);
 
+  Serial.println("Feather LoRa TX Test!");
 
-        Serial.println("initialization failed");
-        return;
-    }
-    Serial.println("initialization done");
-    delay(100);
-    */
-    // myFile = SD.open("sensorData.txt", FILE_WRITE);
-    Serial.println("Feather LoRa RX Test!");
-
-    // manual reset
-    digitalWrite(RFM95_RST, LOW);
-    delay(10);
-    digitalWrite(RFM95_RST, HIGH);
-    delay(10);
+  // manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
 
   while (!rf95.init()) {
     Serial.println("LoRa radio init failed");
@@ -76,68 +67,66 @@ void setup() {
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
   // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
-
-  // set pinmode of LED pin to output
-  pinMode(LED_PIN, OUTPUT);
 }
 
+int16_t packetnum = 0;  // packet counter, we increment per xmission
+
 void loop() {
-  if (rf95.available()) {
-    // Should be a message for us now
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
+  Serial.println("Enter message to send:");
+  while (Serial.available() == 0) {
+    // Wait for user input
+  }
+  
+  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+  int index = 0;
 
-    if (rf95.recv(buf, &len)) {
-      digitalWrite(LED_BUILTIN, HIGH);
-      RH_RF95::printBuffer("Received: ", buf, len);
-      Serial.print("Got: ");
-
-      Serial.println((char*)buf);
-
-
-      char buffer1[140];
-      snprintf(buffer1, sizeof(buffer1), "The value of the received message is: %s\n", (char*)buf);
-
-      char buffer_char[140];
-      snprintf(buffer_char, sizeof(buf), "%s\n", (char*)buf);
-      Serial.print("buffer: ");
-      Serial.println(buffer_char);
-      Serial.println(strncmp(buffer_char, "toggle", 6));
-
-      // checking for command receiving
-      char buf_to_comp_to[6] = {'t', 'o', 'g', 'g', 'l', 'e'};
-      if (strncmp(buffer_char, buf_to_comp_to, 6) == 0) {
-        int cur_state = digitalRead(LED_PIN);
-        digitalWrite(LED_PIN, !cur_state);
-        Serial.print("toggling...");
-        Serial.println(digitalRead(LED_PIN));
-      }
-      /*
-    // writing to the SD card
-     myFile.write(buffer1);
-    myFile.flush();
-      */
-
-       Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);
-    }
-
-    /*
-    // Send a reply
-    char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-    int index = 0;
-
-    while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+  if (Serial.available() > 0 && index < sizeof(radiopacket - 1)) {
+     while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
       char c = Serial.read();
       if (c == '\n') break;  // Stop reading at newline
       radiopacket[index++] = c;
     }
     radiopacket[index] = '\0';  // Null-terminate the string
+    
+    char buf_to_comp_to[1] = {'t'};
+    if (strncmp(radiopacket, buf_to_comp_to, 1) == 0) {
+      Serial.println("Are you sure? Toggling at next toggle command");
 
-    Serial.print("Sending: "); Serial.println(radiopacket);
-    rf95.send((uint8_t *)radiopacket, index + 1);
-    rf95.waitPacketSent();
-    Serial.println("Message sent!");
-    */
+      radiopacket[0] = '\0';
+      while (!Serial.available());
+      index = 0;
+      while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+        char c = Serial.read();
+        if (c == '\n') break;  // Stop reading at newline
+        radiopacket[index++] = c;
+      }
+      radiopacket[index] = '\0';  // Null-terminate the string
+
+      if (strncmp(radiopacket, buf_to_comp_to, 1) == 0) {
+        Serial.print("Sending: "); Serial.println(radiopacket);
+        rf95.send((uint8_t *)radiopacket, index + 1);
+        rf95.waitPacketSent();
+        Serial.println("Message sent!");
+      }
     }
+  }
+
+  // Now wait for a reply
+  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+
+  Serial.println("Waiting for reply...");
+  if (rf95.waitAvailableTimeout(1000)) {
+    // Should be a reply message for us now
+    if (rf95.recv(buf, &len)) {
+      Serial.print("Got reply: ");
+      Serial.println((char*)buf);
+      Serial.print("RSSI: ");
+      Serial.println(rf95.lastRssi(), DEC);
+    } else {
+      Serial.println("Receive failed");
+    }
+  } else {
+    Serial.println("No reply, is there a listener around?");
+  }
 }
