@@ -102,11 +102,10 @@ void loop() {
       snprintf(buffer_char, sizeof(buf), "%s\n", (char*)buf);
       Serial.print("buffer: ");
       Serial.println(buffer_char);
-      Serial.println(strncmp(buffer_char, "toggle", 6));
 
       // checking for command receiving
-      char buf_to_comp_to[6] = {'t', 'o', 'g', 'g', 'l', 'e'};
-      if (strncmp(buffer_char, buf_to_comp_to, 6) == 0) {
+      char buf_to_comp_to[1] = {'t'};
+      if (strncmp(buffer_char, buf_to_comp_to, 1) == 0) {
         int cur_state = digitalRead(LED_PIN);
         digitalWrite(LED_PIN, !cur_state);
         Serial.print("toggling...");

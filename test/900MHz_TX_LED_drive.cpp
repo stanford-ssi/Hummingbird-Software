@@ -16,6 +16,8 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
+#include <strings.h>
+
 // Custom pinout for teensy 4.1
 #define RFM95_CS     10  // "B"
 #define RFM95_INT    0 // "C"
@@ -78,17 +80,34 @@ void loop() {
   char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
   int index = 0;
 
-  while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
-    char c = Serial.read();
-    if (c == '\n') break;  // Stop reading at newline
-    radiopacket[index++] = c;
-  }
-  radiopacket[index] = '\0';  // Null-terminate the string
+  if (Serial.available() > 0 && index < sizeof(radiopacket - 1)) {
+     while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+      char c = Serial.read();
+      if (c == '\n') break;  // Stop reading at newline
+      radiopacket[index++] = c;
+    }
+    radiopacket[index] = '\0';  // Null-terminate the string
+    
+    char buf_to_comp_to[1] = {'t'};
+    if (strncmp(radiopacket, buf_to_comp_to, 1) == 0) {
+      Serial.println("Are you sure? Toggling at next toggle command");
+    }
 
-  Serial.print("Sending: "); Serial.println(radiopacket);
-  rf95.send((uint8_t *)radiopacket, index + 1);
-  rf95.waitPacketSent();
-  Serial.println("Message sent!");
+
+    while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
+      char c = Serial.read();
+      if (c == '\n') break;  // Stop reading at newline
+      radiopacket[index++] = c;
+    }
+    radiopacket[index] = '\0';  // Null-terminate the string
+
+    if (strncmp(radiopacket, buf_to_comp_to, 1) == 0) {
+      Serial.print("Sending: "); Serial.println(radiopacket);
+      rf95.send((uint8_t *)radiopacket, index + 1);
+      rf95.waitPacketSent();
+      Serial.println("Message sent!");
+    }
+  }
 
   // Now wait for a reply
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
