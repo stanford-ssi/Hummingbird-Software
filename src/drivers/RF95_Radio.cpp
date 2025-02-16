@@ -41,7 +41,7 @@ RF95_Radio::RF95_Radio(){
     // this is not part of the original code and does nothing at the moment.
     // pin 1 is RFM95_RST (reset pin), which, when pulled low, should activate the radio module
     // but here it's not working for some reason
-    digitalWrite(1, LOW);   // test
+    digitalWrite(1, arduino::LOW);   // test
 
     // Initialize RF95
     // THIS IS WHERE THE CODE IS FAILING

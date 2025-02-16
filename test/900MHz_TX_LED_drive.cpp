@@ -42,8 +42,6 @@ static SemaphoreHandle_t mutex;
 // this task handles the sending of radio packets
 static void radioSendTask(void *param) {
   Serial.begin(0);
-  char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-  int index = 0;
   
   while (1) {
     xSemaphoreTake(mutex, portMAX_DELAY);
@@ -52,6 +50,9 @@ static void radioSendTask(void *param) {
     while (Serial.available() == 0) {
       // Wait for user input
     }
+    
+    char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
+    int index = 0;
 
     while (Serial.available() > 0 && index < sizeof(radiopacket) - 1) {
       char c = Serial.read();
@@ -62,18 +63,11 @@ static void radioSendTask(void *param) {
 
     // critical section to protect the Serial peripheral
     xSemaphoreTake(mutex, portMAX_DELAY);
-    Serial.print("Sending: "); 
-    Serial.println(radiopacket);
+    Serial.print("Sending: "); Serial.println(radiopacket);
     rf95.send((uint8_t *)radiopacket, index + 1);
-    if (!rf95.waitPacketSent(10000)) {
-        xSemaphoreGive(mutex); // 1000 ms timeout
-        Serial.println("ERROR");
-        vTaskDelete(NULL);
-    }
+    rf95.waitPacketSent();
     Serial.println("Message sent!");
     xSemaphoreGive(mutex);
-
-    index = 0;
   }
 }
 
@@ -88,17 +82,17 @@ static void radioReceiveTask(void *param) {
     xSemaphoreTake(mutex, portMAX_DELAY);
     Serial.println("Waiting for reply...");
     xSemaphoreGive(mutex);
-    
     if (rf95.waitAvailableTimeout(1000)) {
       // Should be a reply message for us now
-      xSemaphoreTake(mutex, portMAX_DELAY);
       if (rf95.recv(buf, &len)) {
+        xSemaphoreTake(mutex, portMAX_DELAY);
         Serial.print("Got reply: ");
         Serial.println((char*)buf);
         Serial.print("RSSI: ");
         Serial.println(rf95.lastRssi(), arduino::DEC);
         xSemaphoreGive(mutex);
       } else {
+        xSemaphoreTake(mutex, portMAX_DELAY);
         Serial.println("Receive failed");
         xSemaphoreGive(mutex);
       }
@@ -172,8 +166,8 @@ FLASHMEM __attribute__((noinline)) void setup() {
   // create mutex before starting tasks
   mutex = xSemaphoreCreateMutex();
 
-  xTaskCreate(radioSendTask, "radioSendTask", 1024, NULL, 1, NULL);  // priority 1
-  xTaskCreate(radioReceiveTask, "radioReceiveTask", 1024, NULL, 1, NULL);    // priority 1
+  xTaskCreate(radioSendTask, "radioSendTask", 128, NULL, 1, NULL);  // priority 2
+  xTaskCreate(radioReceiveTask, "radioReceiveTask", 128, NULL, 1, NULL);    // priority 1
 
   Serial.println("setup(): starting scheduler...");
   Serial.flush();
