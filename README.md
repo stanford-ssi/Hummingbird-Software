@@ -3,6 +3,9 @@ INSTALL ANTENNA FOR RADIO MODULES (can just be a wire) and DO NOT UNPLUG ANTENNA
 This can destroy the chip as the TX power gets reflected and has nowhere to go.
 
 ## Latest Update
+Feb. 16:
+Implemented a more robust radio module that would allows for the use of radio_packet_t's, enabling for higher level commands and instructions.
+
 Feb. 14 (Victor H., Sam C., Jesse F., Arif I., and Pete!): Implemented multithreading for radio TX_LED drive code. Issue: after some number of fast sends, the program stalls. But generally ok if sending slowly. 
 
 Potential culprits:
