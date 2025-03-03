@@ -25,7 +25,7 @@ public:
     RF95_Radio();
 
     /* Tries to find the message, and prints out the message's output */
-    void _getMessage(int bufferSize, radio_packet_t *packet);
+    bool _getMessage(int bufferSize, radio_packet_t *packet);
 
     /* Sends a message to the receiving radio */
     void _sendMessage(uint8_t packetLength, radio_packet_t *packet);

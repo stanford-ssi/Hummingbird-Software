@@ -137,13 +137,13 @@ void _storeMessage(uint8_t *message, radio_packet_t *packet, int len){
     }
 }
 
-void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
+bool RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     // Syncing the radios
     // Given that the _getMessage function will always
     // be called, this sync function is continually going
     // to be called until a sync is sent.
     if (!_receiveSyn()){
-        return;
+        return -1;
     }
 
     // Send an ACK that we received the sync!
@@ -183,6 +183,7 @@ void RF95_Radio::_getMessage(int bufferSize, radio_packet_t *packet){
     _sendACK();
 
     digitalWrite(arduino::LED_BUILTIN, arduino::HIGH);
+    return 0;
 }
 
 void RF95_Radio::_sendMessage(uint8_t packetLength, radio_packet_t *radio_packet){
